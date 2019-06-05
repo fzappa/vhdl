@@ -2,7 +2,6 @@
 -- SISTEMAS DIGITAIS 2012-1
 -- Controle de navegacao de um veiculo terrestre
 -- por hardware embarcado em FPGA 
---
 -- 
 -- CIRCUITO PARA ACIONAMENTO DO MOTOR
 --
@@ -15,12 +14,11 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
 
 
 entity carro_controlado is 
-	port
+    port
 	( 
-		CLOCK, DADO, SINC   : in std_logic;  
+	    CLOCK, DADO, SINC   : in std_logic;  
 		T1,T2,T3,T4         : out std_logic
 	);
-
 end carro_controlado; -- fim da entidade
 
 
@@ -64,9 +62,6 @@ begin
 
 chave <= leitura xor aciona;  -- faz o intertravamento
 
-
-
-
 PROC_LEITURA: 
     process(SINC)  --#### Inicio do processo de leitura dos dados ####
     begin
@@ -92,31 +87,26 @@ PROC_LEITURA:
 
 
 
-
-
-
-
-
 PROC_DIVISOR:
-		process(CLOCK) -- clock 2 seg
-		begin 
-            if falling_edge(CLOCK) then  -- detecta a transicao de descida de A
+process(CLOCK) -- clock 2 seg
+begin 
+    if falling_edge(CLOCK) then  -- detecta a transicao de descida de A
 			
---				if cont<10000000 then
-                if cont<5 then
-                    CLK_2s <='0';
-                    cont <= cont + 1;
+--      if cont<10000000 then
+        if cont<5 then
+            CLK_2s <='0';
+            cont <= cont + 1;
 
---				elsif cont>=10000000 and cont<20000000 then  
-                elsif cont>=5 and cont<10 then
-                    CLK_2s <='1';
-                    cont <= cont + 1;		
-                else
-                    cont <= 1;			
-                end if;
+--		elsif cont>=10000000 and cont<20000000 then  
+        elsif cont>=5 and cont<10 then
+            CLK_2s <='1';
+            cont <= cont + 1;		
+        else
+            cont <= 1;			
+        end if;
                 
-            end if;
-		end process; --fim do processo
+    end if;
+end process; --fim do processo
 
 
 
@@ -126,51 +116,51 @@ PROC_DIVISOR:
 
 
 PROC_ACIONAMENTO: 
-	process(CLK_2s)  --####Inicio do processo de acionamento do motor ####
-	begin
+process(CLK_2s)  --####Inicio do processo de acionamento do motor ####
+begin
     
 -- ################# INICIO MODO MANUAL  #################
 
-        if FALLING_EDGE(CLK_2s) then
+    if FALLING_EDGE(CLK_2s) then
 
-            if (chave='0') and (MODO = '0') then -- 0 - Modo Manual
-                case MOV is
-                    when "00"    => sentido_aux <= "1010";  -- frente (4321) > (T1,T2,T3,T4)
-                    when "01"    => sentido_aux <= "0110";  -- giro direita
-                    when "10"    => sentido_aux <= "1001";  -- giro esquerda
-                    when "11"    => sentido_aux <= "0101";  -- tras
-                    when others  => sentido_aux <= "0000";  -- parado
-                end case;
-                aciona <= not aciona;
+        if (chave='0') and (MODO = '0') then -- 0 - Modo Manual
+            case MOV is
+                when "00"    => sentido_aux <= "1010";  -- frente (4321) > (T1,T2,T3,T4)
+                when "01"    => sentido_aux <= "0110";  -- giro direita
+                when "10"    => sentido_aux <= "1001";  -- giro esquerda
+                when "11"    => sentido_aux <= "0101";  -- tras
+                when others  => sentido_aux <= "0000";  -- parado
+            end case;
+        aciona <= not aciona;
                 
 -- ################# FIM MODO MANUAL  #################
 				
                 
 -- ################# INICIO MODO AUTOMATICO  #################	
 				
-            elsif (chave = '0') and (MODO = '1') then   -- 1 - Modo Automatico
-                if (PASSO <= 4) then
-                    case PASSO is
-                        when 0      => sentido_aux <= "1010";  -- frente
-						when 1      => sentido_aux <= "0110";  -- giro direita
-						when 2      => sentido_aux <= "0101";  -- tras 
-						when 3      => sentido_aux <= "1001";  -- giro esquerda
-                        when 4      => sentido_aux <= "0101";  -- tras 
-						when others => sentido_aux <= "0000";  -- parado
-                    end case;
+        elsif (chave = '0') and (MODO = '1') then   -- 1 - Modo Automatico
+            if (PASSO <= 4) then
+                case PASSO is
+                    when 0      => sentido_aux <= "1010";  -- frente
+					when 1      => sentido_aux <= "0110";  -- giro direita
+					when 2      => sentido_aux <= "0101";  -- tras 
+					when 3      => sentido_aux <= "1001";  -- giro esquerda
+                    when 4      => sentido_aux <= "0101";  -- tras 
+					when others => sentido_aux <= "0000";  -- parado
+                end case;
 					PASSO <= PASSO + 1;                   
-				else
-					aciona <= not aciona;
-				end if;
+			else
+				aciona <= not aciona;
+			end if;
                 
 -- ################# FIM MODO AUTOMATICO  #################
  
-			else -- Ao sair do manual ou automatico
-                sentido_aux <= "0000"; -- carro parado
+		else -- Ao sair do manual ou automatico
+            sentido_aux <= "0000"; -- carro parado
                 
-			end if;		
-		end if;  -- Fim do falling_edge(clock)
-	end process;
+		end if;		
+	end if;  -- Fim do falling_edge(clock)
+end process;
 	
 
 T1 <= sentido_aux(4);
